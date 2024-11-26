@@ -1,8 +1,10 @@
 package cena;
 
-import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.glu.GLU;
+
 
 public class Cena implements GLEventListener {
     public float anguloX = 0;
@@ -14,13 +16,14 @@ public class Cena implements GLEventListener {
 
     @Override
     public void init(GLAutoDrawable drawable) {
-        GL2 gl = drawable.getGL().getGL2();
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        gl.glEnable(GL2.GL_DEPTH_TEST);
+    GL2 gl = drawable.getGL().getGL2();
+    gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    gl.glEnable(GL2.GL_DEPTH_TEST);
 
-        bola = new Bola();
-        mapa = new Mapa();
-    }
+    mapa = new Mapa(); // Inicializa o mapa
+    bola = new Bola(mapa);  // Inicializa a bola e passa o mapa para ela
+}
+
 
 public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
@@ -35,18 +38,33 @@ public void display(GLAutoDrawable drawable) {
     gl.glEnable(GL2.GL_LIGHTING);
     gl.glEnable(GL2.GL_LIGHT0);
 
-    // Câmera segue a bola
-    gl.glTranslatef(-bola.getX(), -3.0f, -12.0f);
-    gl.glRotatef(10.0f, 1.0f, 0.0f, 0.0f);
+    // Ajustar a posição da câmera
+    float cameraDistance = 5.0f;          // Distância atrás da bola (eixo Z)
+    float cameraHeightOffset = 10.5f;      // Deslocamento vertical da câmera (eixo Y)
+
+    // Posição da câmera calculada relativa à bola
+    float cameraX = bola.getX();          // Segue o X da bola
+    float cameraY = bola.getY() + cameraHeightOffset; // Ajusta a altura
+    float cameraZ = bola.getZ() + cameraDistance;     // Atrás da bola no Z
+
+    // Posicionar a câmera usando gluLookAt
+    GLU glu = new GLU();
+    glu.gluLookAt(
+        cameraX, cameraY, cameraZ,    // Posição da câmera
+        bola.getX(), bola.getY(), bola.getZ(),  // Ponto que a câmera observa (bola)
+        0.0f, 1.0f, 0.0f             // Vetor "para cima"
+    );
 
     // Desenhar o mapa
     mapa.draw(gl, bola);
 
-    // Desenhar a bola (com sombra)
+    // Desenhar a bola
     bola.draw(gl);
 
     gl.glFlush();
 }
+
+
 
 
 

@@ -12,6 +12,7 @@ import java.io.IOException;
 public class Bola {
     private float x = 0.5f; // Posição inicial no centro de um bloco livre
     private float z = -2.0f; // Posição inicial
+    private float y = 0.3f;
     private float radius = 0.3f; // Raio da bola
     private Texture texture; // Referência para a textura
     private GLU glu = new GLU(); // Para criar uma esfera texturizada
@@ -21,34 +22,53 @@ public class Bola {
     private float rotationZ = 0.0f; // Rotação em torno do eixo Z
 
     // Construtor para carregar a textura
-    public Bola() {
-        try {
-            // Carregar a textura de um arquivo
-            File textureFile = new File("C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\obama3.jpg"); // Atualize com o caminho correto
-            texture = TextureIO.newTexture(textureFile, true);
-        } catch (IOException e) {
-            System.err.println("Erro ao carregar a textura: " + e.getMessage());
+    public Bola(Mapa mapa) {
+    try {
+        // Carregar a textura de um arquivo
+        File textureFile = new File("C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\obama3.jpg");
+        texture = TextureIO.newTexture(textureFile, true);
+    } catch (IOException e) {
+        System.err.println("Erro ao carregar a textura: " + e.getMessage());
+    }
+
+    // Procurar uma posição válida no mapa para a bola
+    findValidStartPosition(mapa);
+}
+    private void findValidStartPosition(Mapa mapa) {
+    int[][] layout = mapa.getMapa(); // Obter a matriz do mapa
+    for (int i = 0; i < layout.length; i++) {
+        for (int j = 0; j < layout[i].length; j++) {
+            if (layout[i][j] == 2) { // Considera '2' como a posição inicial
+                this.x = j - layout[0].length / 2.0f + 0.5f;
+                this.z = i - layout.length / 2.0f + 0.5f;
+                return;
+            }
         }
     }
+    throw new IllegalStateException("Não foi possível encontrar uma posição inicial válida para a bola.");
+}
+
+
 
     public float getRadius() {
         return radius;
     }
 
   public void draw(GL2 gl) {
-    gl.glPushMatrix();
+        gl.glPushMatrix();
 
-    // 1. Desenhar a sombra da bola no chão
-    drawShadow(gl);
+        // 1. Desenhar a sombra da bola no chão
+        drawShadow(gl);
 
-    // 2. Desenhar a bola com rotação
-    gl.glTranslatef(x, radius, z);
-    gl.glRotatef(rotationX, 1, 0, 0); // Rotação ao redor do eixo X
-    gl.glRotatef(rotationZ, 0, 0, 1); // Rotação ao redor do eixo Z
-    drawTexturedSphere(gl);
+        // 2. Desenhar a bola com rotação
+        gl.glTranslatef(x, y, z);  // Usar a variável 'y' para a altura
+        gl.glRotatef(rotationX, 1, 0, 0); // Rotação ao redor do eixo X
+        gl.glRotatef(rotationZ, 0, 0, 1); // Rotação ao redor do eixo Z
+        drawTexturedSphere(gl);
 
-    gl.glPopMatrix();
-}
+        gl.glPopMatrix();
+    }
+  
 
 
 private void drawShadow(GL2 gl) {
@@ -89,6 +109,16 @@ private void drawShadow(GL2 gl) {
     gl.glEnable(GL2.GL_LIGHTING); // Reativar iluminação
     gl.glPopMatrix();
 }
+    public void reset(Mapa mapa) {
+    // Reposicionar a bola na posição inicial
+    findValidStartPosition(mapa); // Chama o mesmo método para encontrar a posição inicial
+
+    // Resetar a rotação
+    rotationX = 0.0f;
+    rotationZ = 0.0f;
+}
+
+
 
 
 
@@ -109,31 +139,31 @@ private void drawShadow(GL2 gl) {
     }
 
     public void move(float dx, float dz, Mapa mapa) {
-        float newX = x + dx;
-        float newZ = z + dz;
+    float newX = x + dx;
+    float newZ = z + dz;
 
-        // Verificar se a nova posição é válida no mapa
-        if (mapa.isPositionValid(newX, newZ)) {
-            // Atualizar a posição
-            x = newX;
-            z = newZ;
+    // Verificar se a nova posição é válida no mapa
+    if (mapa.isPositionValid(newX, newZ, this)) {
+        x = newX;
+        z = newZ;
 
-            // Atualizar a rotação com base no deslocamento
-            float distance = (float) Math.sqrt(dx * dx + dz * dz); // Distância percorrida
-            float angle = (float) Math.toDegrees(distance / radius); // Ângulo baseado no raio da bola
+        float distance = (float) Math.sqrt(dx * dx + dz * dz);
+        float angle = (float) Math.toDegrees(distance / radius);
 
-            // Determinar os eixos de rotação
-            if (dx != 0) {
-                rotationZ += dx > 0 ? angle : -angle; // Rola no eixo Z
-            }
-            if (dz != 0) {
-                rotationX += dz > 0 ? angle : -angle; // Rola no eixo X
-            }
-        } else {
-            System.out.println("Colisão detectada em: (" + newX + ", " + newZ + ")");
+        if (dx != 0) {
+            rotationZ += dx > 0 ? angle : -angle;
         }
+        if (dz != 0) {
+            rotationX += dz > 0 ? angle : -angle;
+        }
+    } else {
+        System.out.println("Colisão detectada! Reiniciando o jogo.");
+         System.out.println("Colisão detectada em: (" + newX + ", " + newZ + ")");
     }
-
+}
+     public float getY() {
+        return y;
+    }
     public float getX() {
         return x;
     }
