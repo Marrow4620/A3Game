@@ -21,15 +21,23 @@ public class Cena implements GLEventListener {
     gl.glEnable(GL2.GL_DEPTH_TEST);
 
     mapa = new Mapa(); // Inicializa o mapa
+   
     bola = new Bola(mapa);  // Inicializa a bola e passa o mapa para ela
+    
 }
+
+
+
+
+
+
 
 
 public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
     gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
     gl.glLoadIdentity();
-
+    
     // Configurar a luz
     float[] lightPosition = {0.0f, 5.0f, 0.0f, 1.0f}; // Luz acima da cena
     float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1.0f};  // Luz branca

@@ -1,20 +1,25 @@
+
 package cena;
 
 import com.jogamp.opengl.GL2;
 
 public class Mapa {
-   private final int[][] mapa = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 2, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
-    {1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1},
-    {1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1},
-    {1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1},
-    {1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1}
-};
+    protected int[][] mapa; // Tornar a matriz protegida para acesso em subclasses
 
+    public Mapa() {
+        // Inicialize o mapa padrão (Mapa 1)
+        mapa = new int[][]{
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 2, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+            {1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1},
+            {1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1},
+            {1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1},
+            {1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1}
+        };
+    }
     // Retorna a largura do mapa
     public int getWidth() {
         return mapa[0].length;
@@ -24,30 +29,76 @@ public class Mapa {
     public int getHeight() {
         return mapa.length;
     }
+    public int[][] getMapa() {
+        return mapa;
+    }
 
     private final float TILE_SIZE = 1.0f; // Tamanho de cada bloco do mapa
 
- public boolean isPositionValid(float x, float z, Bola bola) {
+ private int mapaAtual = 1; // 1 = Mapa1, 2 = Mapa2, 3 = Mapa3
+
+public boolean isPositionValid(float x, float z, Bola bola) {
     int gridX = (int) Math.floor(x + mapa[0].length / 2.0f);
     int gridZ = (int) Math.floor(z + mapa.length / 2.0f);
 
+    // Verifica se a posição está fora dos limites do mapa
     if (gridX < 0 || gridX >= mapa[0].length || gridZ < 0 || gridZ >= mapa.length) {
         return false;
     }
 
+    // Verifica colisão com blocos sólidos (1)
     if (mapa[gridZ][gridX] == 1) {
-        bola.reset(this); // Passa o mapa para reposicionar a bola na posição inicial
-        return false;
+        System.out.println("Colisão detectada! Reiniciando o jogo.");
+        
+        // Reseta para o mapa inicial
+        Mapa mapaInicial = new Mapa();
+        this.mapa = mapaInicial.mapa;
+        bola.resetPositionInNewMapa(mapaInicial);
+        mapaAtual = 1; // Volta para o primeiro mapa
+
+        return false; // Evita que a bola continue se movendo
     }
 
+    // Verifica se a bola atingiu o ponto de transição (bloco 3)
     if (mapa[gridZ][gridX] == 3) {
-        System.out.println("Parabéns! Você completou o jogo.");
-        bola.reset(this); // Reinicia a bola quando o jogador completa o jogo
+        if (mapaAtual == 1) { // Se estiver no primeiro mapa
+            System.out.println("Parabéns! Você completou o primeiro mapa. Indo para o próximo...");
+            Mapa novoMapa = new Mapa2();
+            this.mapa = novoMapa.mapa;
+            bola.resetPositionInNewMapa(novoMapa);
+            mapaAtual = 2; // Atualiza para o segundo mapa
+        } else if (mapaAtual == 2) { // Se estiver no segundo mapa
+            System.out.println("Parabéns! Você completou o segundo mapa. Indo para o último...");
+            Mapa novoMapa = new Mapa3();
+            this.mapa = novoMapa.mapa;
+            bola.resetPositionInNewMapa(novoMapa);
+            mapaAtual = 3; // Atualiza para o terceiro mapa
+        } else if (mapaAtual == 3) { // Se estiver no terceiro mapa
+            System.out.println("Parabéns! Você chegou ao fim do jogo!");
+            // Adicione lógica final (como encerrar o jogo ou exibir mensagem final)
+        }
+
+        return false; // Transição impede que continue no mapa atual
     }
 
-    return true;
+    return true; // A posição é válida para movimentação
 }
 
+
+
+  
+
+public Mapa getProximoMapa() {
+    if (this instanceof Mapa) {
+        return new Mapa2(); // Transição do primeiro para o segundo mapa
+    } else if (this instanceof Mapa2) {
+        return new Mapa3(); // Transição do segundo para o terceiro mapa
+    } else if (this instanceof Mapa3) {
+        System.out.println("Parabéns! Você completou o jogo!");
+        return this; // Retorna o próprio mapa, pois não há mais transições
+    }
+    return null; // Apenas como fallback
+}
 
 
 
@@ -62,13 +113,14 @@ public class Mapa {
             gl.glTranslatef(j - mapa[0].length / 2.0f + 0.5f, 0, i - mapa.length / 2.0f + 0.5f);
 
             if (mapa[i][j] == 1) {
-                gl.glColor3f(0.5f, 0.5f, 0.5f); // Cor da parede
+                gl.glColor3f(0.0f, 0.0f, 0.0f); // Cor da parede
                 drawTile(gl, true);
             } else if (mapa[i][j] == 2 || mapa[i][j] == 3) {
                 gl.glColor3f(0.0f, 0.0f, 1.0f); // Cor de início e fim
                 drawTile(gl, false);
             } else {
-                gl.glColor3f(0.0f, 1.0f, 0.0f); // Caminho
+                gl.glColor3f(0.015686f, 0.992156f, 0.996078f); // Cor #04FDFE
+
                 drawTile(gl, false);
             }
 
@@ -81,9 +133,7 @@ public class Mapa {
     // Desenhar a luz no centro do mapa
     drawLightSource(gl);
 }
-   public int[][] getMapa() {
-    return mapa;
-}
+
 
 
 

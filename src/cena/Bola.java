@@ -34,19 +34,28 @@ public class Bola {
     // Procurar uma posição válida no mapa para a bola
     findValidStartPosition(mapa);
 }
-    private void findValidStartPosition(Mapa mapa) {
-    int[][] layout = mapa.getMapa(); // Obter a matriz do mapa
+private void findValidStartPosition(Mapa mapa) {
+    int[][] layout = mapa.getMapa(); // Obtém a matriz do mapa
+
     for (int i = 0; i < layout.length; i++) {
         for (int j = 0; j < layout[i].length; j++) {
-            if (layout[i][j] == 2) { // Considera '2' como a posição inicial
-                this.x = j - layout[0].length / 2.0f + 0.5f;
-                this.z = i - layout.length / 2.0f + 0.5f;
-                return;
+            if (layout[i][j] == 2) { // Valor 2 indica posição inicial
+                this.x = j - layout[0].length / 2.0f + 0.5f; // Calcula posição X
+                this.z = i - layout.length / 2.0f + 0.5f;    // Calcula posição Z
+                return; // Sai após encontrar a posição
             }
         }
     }
+
     throw new IllegalStateException("Não foi possível encontrar uma posição inicial válida para a bola.");
 }
+
+public void resetPositionInNewMapa(Mapa novoMapa) {
+    findValidStartPosition(novoMapa); // Localiza o bloco 2 no novo mapa e reposiciona a bola
+}
+
+
+
 
 
 
@@ -109,14 +118,12 @@ private void drawShadow(GL2 gl) {
     gl.glEnable(GL2.GL_LIGHTING); // Reativar iluminação
     gl.glPopMatrix();
 }
-    public void reset(Mapa mapa) {
-    // Reposicionar a bola na posição inicial
-    findValidStartPosition(mapa); // Chama o mesmo método para encontrar a posição inicial
-
-    // Resetar a rotação
-    rotationX = 0.0f;
-    rotationZ = 0.0f;
+public void reset(Mapa novoMapa) {
+    findValidStartPosition(novoMapa); // Define a nova posição inicial baseada no mapa
 }
+
+
+
 
 
 
