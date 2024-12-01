@@ -6,6 +6,7 @@ import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.glu.GLU;
 
 
+
 public class Cena implements GLEventListener {
     public float anguloX = 0;
     public float anguloY = 0;
@@ -13,31 +14,46 @@ public class Cena implements GLEventListener {
 
     private Bola bola;
     private Mapa mapa;
+  
 
     @Override
-    public void init(GLAutoDrawable drawable) {
+public void init(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
     gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl.glEnable(GL2.GL_DEPTH_TEST);
-
-    mapa = new Mapa(); // Inicializa o mapa
-   
-    bola = new Bola(mapa);  // Inicializa a bola e passa o mapa para ela
     
+    mapa.setCena(this); // 'this' é a instância de Cena atual
+    
+    // Inicializa o mapa e a bola
+    mapa = new Mapa();
+    mapa.setCena(this);
+    bola = new Bola(mapa);
+    
+
+    // Carrega a textura da tela final
+    mapa.carregarTelaFinal("C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\Labirinto.jpg");
+
+    // Inicia com a tela final desativada
 }
 
 
 
 
 
-
-
+    @Override
 
 public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
     gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
     gl.glLoadIdentity();
-    
+     
+
+    // Verifica se deve exibir a tela final
+    if (mapa.deveExibirTelaFinal()) {
+        mapa.desenharTelaFinal(gl);
+        return;
+    }
+
     // Configurar a luz
     float[] lightPosition = {0.0f, 5.0f, 0.0f, 1.0f}; // Luz acima da cena
     float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1.0f};  // Luz branca
