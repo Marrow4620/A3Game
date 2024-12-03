@@ -28,7 +28,16 @@ public class KeyBoard implements KeyListener {
 
         if (e.getKeyCode() == KeyEvent.VK_D)
             cena.getBola().move(0.1f, 0, cena.getMapa());
-    }
+         // Alternar skins
+        if (e.getKeyCode() == KeyEvent.VK_1) {
+            cena.getBola().setTexture(0);
+        } else if (e.getKeyCode() == KeyEvent.VK_2) {
+            cena.getBola().setTexture(1);
+        } else if (e.getKeyCode() == KeyEvent.VK_3) {
+            cena.getBola().setTexture(2);
+        }
+    
+   }
 
     @Override
     public void keyReleased(KeyEvent e) {}

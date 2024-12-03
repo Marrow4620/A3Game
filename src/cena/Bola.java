@@ -8,6 +8,8 @@ import com.jogamp.opengl.glu.GLUquadric;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Bola {
     private float x = 0.5f; // Posição inicial no centro de um bloco livre
@@ -16,24 +18,36 @@ public class Bola {
     private float radius = 0.3f; // Raio da bola
     private Texture texture; // Referência para a textura
     private GLU glu = new GLU(); // Para criar uma esfera texturizada
-
+    private List<Texture> skins = new ArrayList<>();
+    private int currentSkinIndex = 0; // Índice da textura atual
     // Variáveis para controlar a rotação da bola
     private float rotationX = 0.0f; // Rotação em torno do eixo X
     private float rotationZ = 0.0f; // Rotação em torno do eixo Z
 
     // Construtor para carregar a textura
-    public Bola(Mapa mapa) {
-    try {
-        // Carregar a textura de um arquivo
-        File textureFile = new File("C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\obama3.jpg");
-        texture = TextureIO.newTexture(textureFile, true);
-    } catch (IOException e) {
-        System.err.println("Erro ao carregar a textura: " + e.getMessage());
+ public Bola(Mapa mapa) {
+         carregarSkins(); // Carregar todas as skins
+        setTexture(0); // Define a primeira textura como padrão
+        findValidStartPosition(mapa); // Localiza posição inicial válida
     }
 
-    // Procurar uma posição válida no mapa para a bola
-    findValidStartPosition(mapa);
-}
+    private void carregarSkins() {
+        String[] skinPaths = {
+            "C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\obama3.jpg",
+            "C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\color.png",
+            "C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\teste.png"
+        };
+
+        for (String path : skinPaths) {
+            try {
+                skins.add(TextureIO.newTexture(new File(path), true));
+            } catch (IOException e) {
+                System.err.println("Erro ao carregar a textura: " + path + " - " + e.getMessage());
+            }
+        }
+    }
+ 
+ 
 private void findValidStartPosition(Mapa mapa) {
     int[][] layout = mapa.getMapa(); // Obtém a matriz do mapa
 
@@ -129,6 +143,24 @@ public void reset(Mapa novoMapa) {
 
 
 
+    public void setTexture(int index) {
+        if (index >= 0 && index < skins.size()) {
+            currentSkinIndex = index;
+            texture = skins.get(index);
+            System.out.println("Skin alterada para: " + index);
+        } else {
+            System.err.println("Índice de skin inválido: " + index);
+        }
+    }
+
+    public void nextTexture() {
+        setTexture((currentSkinIndex + 1) % skins.size());
+    }
+
+    public void previousTexture() {
+        setTexture((currentSkinIndex - 1 + skins.size()) % skins.size());
+    }
+
     private void drawTexturedSphere(GL2 gl) {
         if (texture != null) {
             texture.enable(gl);
@@ -136,8 +168,8 @@ public void reset(Mapa novoMapa) {
         }
 
         GLUquadric quad = glu.gluNewQuadric();
-        glu.gluQuadricTexture(quad, true); // Ativa texturas na esfera
-        glu.gluSphere(quad, radius, 30, 30); // Desenha a esfera texturizada
+        glu.gluQuadricTexture(quad, true);
+        glu.gluSphere(quad, radius, 30, 30);
         glu.gluDeleteQuadric(quad);
 
         if (texture != null) {
