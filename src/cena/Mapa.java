@@ -9,6 +9,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.AudioInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class Mapa {
     protected int[][] mapa; // Tornar a matriz protegida para acesso em subclasses
@@ -41,18 +43,22 @@ public class Mapa {
         return mapa;
     }
     // Tamanho de cada bloco do mapa
-
-
- private int mapaAtual = 1; // 1 = Mapa1, 2 = Mapa2, 3 = Mapa3
-     public void carregarTelaFinal(String caminhoArquivo) {
-        try {
-            File textureFile = new File(caminhoArquivo);
-            telaFinalTexture = TextureIO.newTexture(textureFile, true);
-            System.out.println("Textura da tela final carregada com sucesso.");
-        } catch (IOException e) {
-            System.err.println("Erro ao carregar a textura da tela final: " + e.getMessage());
+private int mapaAtual = 1; // 1 = Mapa1, 2 = Mapa2, 3 = Mapa3
+    
+public void carregarTelaFinal(String caminhoArquivo) {
+    try {
+        // Use o class loader para carregar a textura como recurso
+        InputStream textureStream = getClass().getResourceAsStream(caminhoArquivo);
+        if (textureStream == null) {
+            throw new IOException("Recurso não encontrado: " + caminhoArquivo);
         }
+        
+        telaFinalTexture = TextureIO.newTexture(textureStream, true, TextureIO.JPG);
+        System.out.println("Textura da tela final carregada com sucesso.");
+    } catch (IOException e) {
+        System.err.println("Erro ao carregar a textura da tela final: " + e.getMessage());
     }
+}
 
 public boolean isPositionValid(float x, float z, Bola bola) {
     int gridX = (int) Math.floor(x + mapa[0].length / 2.0f);
@@ -110,22 +116,45 @@ public boolean isPositionValid(float x, float z, Bola bola) {
     return true; // A posição é válida para movimentação
 }
 
-    private void tocarAudio(String caminhoAudio) {
-        try {
-            File audioFile = new File(caminhoAudio);
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioFile);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();
-        } catch (Exception e) {
-            System.err.println("Erro ao reproduzir áudio: " + e.getMessage());
+ private void tocarAudio(String caminhoAudio) {
+    try {
+        // Carregar o recurso como InputStream
+        InputStream audioStream = getClass().getResourceAsStream(caminhoAudio);
+        if (audioStream == null) {
+            throw new Exception("Recurso de áudio não encontrado: " + caminhoAudio);
         }
+
+        // Criar um arquivo temporário para o áudio
+        File tempAudioFile = File.createTempFile("audioTemp", ".wav");
+        tempAudioFile.deleteOnExit();
+
+        // Gravar o InputStream no arquivo temporário
+        try (FileOutputStream fos = new FileOutputStream(tempAudioFile)) {
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = audioStream.read(buffer)) != -1) {
+                fos.write(buffer, 0, bytesRead);
+            }
+        }
+
+        // Reproduzir o áudio do arquivo temporário
+        AudioInputStream stream = AudioSystem.getAudioInputStream(tempAudioFile);
+        Clip clip = AudioSystem.getClip();
+        clip.open(stream);
+        clip.start();
+
+    } catch (Exception e) {
+        System.err.println("Erro ao reproduzir áudio: " + e.getMessage());
     }
-     public void finalizarJogo() {
-        exibirTelaFinal = true;
-        tocarAudio("C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\Audio.wav"); // Toca o áudio
-        System.out.println("Jogador chegou ao final! Tela final exibida e som tocando.");
-    }
+}
+
+
+
+public void finalizarJogo() {
+    exibirTelaFinal = true;
+    tocarAudio("/Audio.wav"); // Caminho relativo para o áudio no .jar
+    System.out.println("Jogador chegou ao final! Tela final exibida e som tocando.");
+}
 
     
  

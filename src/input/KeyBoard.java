@@ -36,6 +36,9 @@ public class KeyBoard implements KeyListener {
         } else if (e.getKeyCode() == KeyEvent.VK_3) {
             cena.getBola().setTexture(2);
         }
+         else if (e.getKeyCode() == KeyEvent.VK_4) {
+            cena.getBola().setTexture(3);
+        }
     
    }
 

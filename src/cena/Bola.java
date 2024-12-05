@@ -8,6 +8,7 @@ import com.jogamp.opengl.glu.GLUquadric;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,9 +21,9 @@ public class Bola {
     private GLU glu = new GLU(); // Para criar uma esfera texturizada
     private List<Texture> skins = new ArrayList<>();
     private int currentSkinIndex = 0; // Índice da textura atual
-    // Variáveis para controlar a rotação da bola
-    private float rotationX = 0.0f; // Rotação em torno do eixo X
-    private float rotationZ = 0.0f; // Rotação em torno do eixo Z
+    
+    private float rotationX = 0.0f;
+    private float rotationZ = 0.0f;
 
     // Construtor para carregar a textura
  public Bola(Mapa mapa) {
@@ -32,21 +33,28 @@ public class Bola {
     }
 
     private void carregarSkins() {
-        String[] skinPaths = {
-            "C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\obama3.jpg",
-            "C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\color.png",
-            "C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\teste.png"
-        };
+    // Caminhos relativos aos arquivos dentro do JAR ou no diretório de recursos
+    String[] skinPaths = {
+        "/obama3.jpg",
+        "/color.png",
+        "/teste.png",
+        "/coringa.jpg"
+    };
 
-        for (String path : skinPaths) {
-            try {
-                skins.add(TextureIO.newTexture(new File(path), true));
-            } catch (IOException e) {
-                System.err.println("Erro ao carregar a textura: " + path + " - " + e.getMessage());
+    for (String path : skinPaths) {
+        try {
+            // Use o class loader para acessar os recursos empacotados
+            InputStream stream = getClass().getResourceAsStream(path);
+            if (stream == null) {
+                throw new IOException("Recurso não encontrado: " + path);
             }
+            skins.add(TextureIO.newTexture(stream, true, null));
+        } catch (IOException e) {
+            System.err.println("Erro ao carregar a textura: " + path + " - " + e.getMessage());
         }
     }
- 
+}
+
  
 private void findValidStartPosition(Mapa mapa) {
     int[][] layout = mapa.getMapa(); // Obtém a matriz do mapa
@@ -54,8 +62,8 @@ private void findValidStartPosition(Mapa mapa) {
     for (int i = 0; i < layout.length; i++) {
         for (int j = 0; j < layout[i].length; j++) {
             if (layout[i][j] == 2) { // Valor 2 indica posição inicial
-                this.x = j - layout[0].length / 2.0f + 0.5f; // Calcula posição X
-                this.z = i - layout.length / 2.0f + 0.5f;    // Calcula posição Z
+                this.x = j - layout[0].length / 2.0f + 0.5f; 
+                this.z = i - layout.length / 2.0f + 0.5f;    
                 return; // Sai após encontrar a posição
             }
         }
@@ -113,7 +121,7 @@ private void drawShadow(GL2 gl) {
     // Aplicar a matriz de projeção
     gl.glPushMatrix();
     gl.glMultMatrixf(shadowMatrix, 0);
-    gl.glTranslatef(bolaX, 0.01f, bolaZ); // Ajuste para evitar clipping com o chão
+    gl.glTranslatef(bolaX, 0.01f, bolaZ); 
 
     // Habilitar PolygonOffset para evitar z-fighting
     gl.glEnable(GL2.GL_POLYGON_OFFSET_FILL);
@@ -129,7 +137,7 @@ private void drawShadow(GL2 gl) {
 
     // Desativar PolygonOffset
     gl.glDisable(GL2.GL_POLYGON_OFFSET_FILL);
-    gl.glEnable(GL2.GL_LIGHTING); // Reativar iluminação
+    gl.glEnable(GL2.GL_LIGHTING);
     gl.glPopMatrix();
 }
 public void reset(Mapa novoMapa) {
@@ -177,29 +185,37 @@ public void reset(Mapa novoMapa) {
         }
     }
 
-    public void move(float dx, float dz, Mapa mapa) {
+public void move(float dx, float dz, Mapa mapa) {
     float newX = x + dx;
     float newZ = z + dz;
 
     // Verificar se a nova posição é válida no mapa
     if (mapa.isPositionValid(newX, newZ, this)) {
+        // Atualiza as posições
         x = newX;
         z = newZ;
 
+        // Calcula a distância real percorrida
         float distance = (float) Math.sqrt(dx * dx + dz * dz);
+
+        // Calcula o ângulo de rotação baseado na distância e no raio da esfera
         float angle = (float) Math.toDegrees(distance / radius);
 
-        if (dx != 0) {
-            rotationZ += dx > 0 ? angle : -angle;
-        }
-        if (dz != 0) {
-            rotationX += dz > 0 ? angle : -angle;
-        }
+        // Calcula o vetor de direção normalizado
+        float magnitude = (float) Math.sqrt(dx * dx + dz * dz);
+        float dirX = dx / magnitude; // Direção X
+        float dirZ = dz / magnitude; // Direção Z
+
+        // Atualiza as rotações baseadas na direção
+        rotationZ += dirX * -angle; // Rotação em torno do eixo Z
+        rotationX += dirZ * angle;  // Rotação em torno do eixo X
     } else {
+       
         System.out.println("Colisão detectada! Reiniciando o jogo.");
-         System.out.println("Colisão detectada em: (" + newX + ", " + newZ + ")");
+        System.out.println("Colisão detectada em: (" + newX + ", " + newZ + ")");
     }
 }
+
      public float getY() {
         return y;
     }

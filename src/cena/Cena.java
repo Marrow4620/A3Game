@@ -22,7 +22,7 @@ public void init(GLAutoDrawable drawable) {
     gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl.glEnable(GL2.GL_DEPTH_TEST);
     
-    mapa.setCena(this); // 'this' é a instância de Cena atual
+    mapa.setCena(this); 
     
     // Inicializa o mapa e a bola
     mapa = new Mapa();
@@ -30,8 +30,10 @@ public void init(GLAutoDrawable drawable) {
     bola = new Bola(mapa);
     
 
-    // Carrega a textura da tela final
-    mapa.carregarTelaFinal("C:\\Users\\guilh\\OneDrive\\Documentos\\NetBeansProjects\\A3jogo\\src\\Labirinto.jpg");
+   
+   // Chamada para carregar a tela final no Mapa
+    mapa.carregarTelaFinal("/Labirinto.jpg"); // Caminho relativo ao .jar
+
 
     // Inicia com a tela final desativada
 }
@@ -62,7 +64,7 @@ public void display(GLAutoDrawable drawable) {
     gl.glEnable(GL2.GL_LIGHTING);
     gl.glEnable(GL2.GL_LIGHT0);
 
-    // Ajustar a posição da câmera
+   
     float cameraDistance = 5.0f;          // Distância atrás da bola (eixo Z)
     float cameraHeightOffset = 10.5f;      // Deslocamento vertical da câmera (eixo Y)
 
